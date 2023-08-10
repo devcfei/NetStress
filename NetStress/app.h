@@ -18,4 +18,11 @@ private:
     BOOL bStart_;
 
     MainDlg dlgMain_;
+
+
+    HANDLE* hThreadArr_;
+    static DWORD WINAPI WorkerThreadProc(LPVOID lpParam);
+    DWORD WorkerThread();
+
+    HANDLE hExitEvent_;
 };

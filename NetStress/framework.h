@@ -20,6 +20,19 @@
 
 // STL
 #include <vector>
+#include <string>
+namespace std
+{
+
+#if defined(_UNICODE)
+    typedef wstring tstring;
+#else
+    typedef string tstring;
+#endif
+};
+
+// ATL
+#include <atlconv.h>
 
 // 
 #include "resource.h"
@@ -37,16 +50,18 @@
 
 
 // Private modules
+#include "log.h"
 #include "maindlg.h"
 #include "app.h"
 
 
 // Macro
-#define LOGF(...) AppLogPrintf(APPLOG_FATAL,__VA_ARGS__)
-#define LOGE(...) AppLogPrintf(APPLOG_ERROR,__VA_ARGS__)
-#define LOGW(...) AppLogPrintf(APPLOG_WARNING,__VA_ARGS__)
-#define LOGI(...) AppLogPrintf(APPLOG_INFO,__VA_ARGS__)
-#define LOGV(...) AppLogPrintf(APPLOG_VERBOSE,__VA_ARGS__)
+#define LOGF(...) LogPrintf(LOG_FATAL,__VA_ARGS__)
+#define LOGE(...) LogPrintf(LOG_ERROR,__VA_ARGS__)
+#define LOGW(...) LogPrintf(LOG_WARNING,__VA_ARGS__)
+#define LOGI(...) LogPrintf(LOG_INFO,__VA_ARGS__)
+#define LOGV(...) LogPrintf(LOG_VERBOSE,__VA_ARGS__)
+
 
 // 
 extern App* GetApp();

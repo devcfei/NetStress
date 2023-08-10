@@ -28,6 +28,7 @@ INT_PTR CALLBACK MainDlg::DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPA
     case WM_INITDIALOG:
         pThis = (MainDlg*)lParam;
 
+        pThis->hDlg_ = hDlg;
         r = pThis->OnInitDialog(hDlg, message, wParam, lParam);
         break;
 
@@ -86,27 +87,9 @@ INT_PTR MainDlg::OnInitDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
     HWND hWndPort = GetDlgItem(hDlg, IDC_EDIT_PORT);
     SetWindowText(hWndPort, _T("10240"));
     HWND hWndConnCount = GetDlgItem(hDlg, IDC_EDIT_CONN_COUNT);
-    SetWindowText(hWndConnCount, _T("10"));
+    SetWindowText(hWndConnCount, _T("10"));  
 
-    
-
-    //
-    TCHAR lpszLatin[] = L"Lorem ipsum dolor sit amet, consectetur "
-        L"adipisicing elit, sed do eiusmod tempor "
-        L"incididunt ut labore et dolore magna "
-        L"aliqua. Ut enim ad minim veniam, quis "
-        L"nostrud exercitation ullamco laboris nisi "
-        L"ut aliquip ex ea commodo consequat. Duis "
-        L"aute irure dolor in reprehenderit in "
-        L"voluptate velit esse cillum dolore eu "
-        L"fugiat nulla pariatur. Excepteur sint "
-        L"occaecat cupidatat non proident, sunt "
-        L"in culpa qui officia deserunt mollit "
-        L"anim id est laborum.";
-
-    HWND hWndEditLog = GetDlgItem(hDlg, IDC_EDIT_LOG);
-    SetWindowText(hWndEditLog, lpszLatin);
-
+    PrintMessage(_T("Application initialized success!"));
 
     return (INT_PTR)TRUE;
 }
@@ -159,4 +142,48 @@ INT_PTR MainDlg::OnCommand(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
         break;
     }
     return r;
+}
+
+ULONG MainDlg::GetIPAddress(TCHAR szIP[], ULONG nSize)
+{
+    HWND hWndIP = GetDlgItem(hDlg_, IDC_IPADDRESS);
+    return GetWindowText(hWndIP, szIP, nSize);
+}
+
+WORD MainDlg::GetPortNumber()
+{
+    HWND hWndIP = GetDlgItem(hDlg_, IDC_EDIT_PORT);
+    TCHAR szText[16];
+    GetWindowText(hWndIP, szText, 16);
+    return StrToInt(szText);
+}
+
+ULONG MainDlg::GetConnCount()
+{
+    HWND hWndIP = GetDlgItem(hDlg_, IDC_EDIT_CONN_COUNT);
+    TCHAR szText[16];
+    GetWindowText(hWndIP, szText, 16);
+    return StrToInt(szText);
+
+}
+
+VOID MainDlg::PrintMessage(LPCTSTR fmt,...)
+{
+    HRESULT hr;
+    TCHAR szMessageBuffer[1024] = { 0 };
+    va_list valist;
+    va_start(valist, fmt);
+    hr = StringCchVPrintf(szMessageBuffer, 1024, fmt, valist);
+    if (FAILED(hr))
+    {
+        return ;
+    }
+    va_end(valist);
+
+
+    msg_ += szMessageBuffer;
+    msg_ += _T("\r\n");
+
+    HWND hWndEditLog = GetDlgItem(hDlg_, IDC_EDIT_LOG);
+    SetWindowText(hWndEditLog, msg_.c_str());
 }
