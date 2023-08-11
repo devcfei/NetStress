@@ -12,10 +12,17 @@ public:
     HRESULT Start();
     HRESULT Stop();
     BOOL IsStart();
+
+    HRESULT GetAppPath(TCHAR *szAppPath, int nSize)
+    {
+        return StringCchCopy(szAppPath, nSize, szAppPath_);
+    }
 private:
     HINSTANCE hInstance_;
     TCHAR szAppPath_[MAX_PATH];
     BOOL bStart_;
+
+
 
     MainDlg dlgMain_;
 

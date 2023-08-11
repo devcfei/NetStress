@@ -8,8 +8,9 @@ public:
     MainDlg()
         :hInst_(0)
         , hbrBkgnd_(0)
+        , hDlg_(0)
     {
-
+        InitializeDefaultConfig();
     }
 
     HRESULT Initialize(HINSTANCE hInstance);
@@ -17,7 +18,7 @@ public:
 
     ULONG GetIPAddress(TCHAR szIP[], ULONG nSize);
     WORD GetPortNumber();
-    ULONG GetConnCount();
+    DWORD GetConnCount();
 
     VOID PrintMessage(LPCTSTR fmt, ...);
 
@@ -32,4 +33,14 @@ private:
     INT_PTR OnCommand(HWND, UINT, WPARAM, LPARAM);
 
     std::tstring msg_;
+
+private:
+    // config
+    TCHAR szIP_[16];
+    WORD wPort_;
+    DWORD dwConnCount_;
+
+    HRESULT InitializeDefaultConfig();
+    HRESULT ReadConfig(LPCTSTR lpszCfgFile);
+    HRESULT WriteConfig(LPCTSTR lpszCfgFile);
 };

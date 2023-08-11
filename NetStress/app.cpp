@@ -20,6 +20,12 @@ HRESULT App::Initialize(HINSTANCE hInstance)
     HRESULT hr = S_OK;
     hInstance_ = hInstance;
 
+
+    // Get application path
+    GetModuleFileName(NULL, szAppPath_, MAX_PATH);
+    PathRemoveFileSpec(szAppPath_);
+
+
     // WSAStartup
     WSADATA wsaData;
     if ((WSAStartup(MAKEWORD(2, 2), &wsaData)) != 0) {
@@ -92,6 +98,8 @@ BOOL App::IsStart()
 
 
 
+
+
 DWORD WINAPI App::WorkerThreadProc(LPVOID lpParam)
 {
     App* pThis = (App*)lpParam;
@@ -114,8 +122,8 @@ DWORD App::WorkerThread()
     wPort = dlgMain_.GetPortNumber();
     StringCchPrintf(szPort, 16, _T("%d"), wPort);
 
-    WSABUF wsabufSend;
-    WSABUF wsabufRecv;
+    WSABUF wsabufSend = { 0 };
+    WSABUF wsabufRecv = { 0 };
 
     dlgMain_.PrintMessage(_T("start thread"));
 
@@ -316,6 +324,8 @@ DWORD App::WorkerThread()
         {
             delete[] wsabufRecv.buf;
         }
+
+        closesocket(sockConn);
 
     }
 
