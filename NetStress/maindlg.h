@@ -33,6 +33,7 @@ private:
     INT_PTR OnColorStatic(HWND, UINT, WPARAM, LPARAM);
     INT_PTR OnCommand(HWND, UINT, WPARAM, LPARAM);
 
+    CRITICAL_SECTION csLog_;
     std::tstring msg_;
     DWORD dwLineCount_;
 

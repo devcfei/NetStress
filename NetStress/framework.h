@@ -50,6 +50,7 @@ namespace std
 
 
 // Private modules
+#include "utils.h"
 #include "log.h"
 #include "maindlg.h"
 #include "app.h"

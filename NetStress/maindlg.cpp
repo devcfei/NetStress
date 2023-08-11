@@ -31,6 +31,10 @@ HRESULT MainDlg::Initialize(HINSTANCE hInstance)
         ReadConfig(szCfgPath);
     }
 
+    // lock
+    InitializeCriticalSection(&csLog_);
+
+
     return hr;
 }
 
@@ -262,6 +266,9 @@ VOID MainDlg::PrintMessage(LPCTSTR fmt,...)
 {
     HRESULT hr;
     TCHAR szMessageBuffer[1024] = { 0 };
+
+    CCSLock lock(&csLog_);
+
     va_list valist;
     va_start(valist, fmt);
     hr = StringCchVPrintf(szMessageBuffer, 1024, fmt, valist);
