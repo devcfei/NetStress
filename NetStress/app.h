@@ -2,6 +2,8 @@
 
 
 
+
+
 class App
 {
 public:
@@ -26,10 +28,21 @@ private:
 
     MainDlg dlgMain_;
 
+    typedef struct _THREAD_DATA
+    {
+        HANDLE hThread;
+        DWORD dwSendCount;
+        DWORD dwID;
+        App* pApp;
+    }THREAD_DATA;
 
-    HANDLE* hThreadArr_;
+    THREAD_DATA *threadDataArr_;
+    //HANDLE* hThreadArr_;
+    //DWORD *dwCountArr_;
     static DWORD WINAPI WorkerThreadProc(LPVOID lpParam);
-    DWORD WorkerThread();
+    DWORD WorkerThread(DWORD dwID);
+
+
 
     HANDLE hExitEvent_;
 };

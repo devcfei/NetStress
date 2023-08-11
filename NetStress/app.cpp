@@ -9,9 +9,9 @@ App::App()
 
 App::~App()
 {
-    if (hThreadArr_)
+    if (threadDataArr_)
     {
-        delete[] hThreadArr_;
+        delete[] threadDataArr_;
     }
 }
 
@@ -54,15 +54,20 @@ HRESULT App::Start()
 
     ULONG conncnt=dlgMain_.GetConnCount();
 
-    hThreadArr_ = new HANDLE[conncnt];
 
+    threadDataArr_ = new THREAD_DATA[conncnt];
 
     for (ULONG i = 0; i < conncnt; ++i)
     {
         HANDLE hThread = INVALID_HANDLE_VALUE;
         DWORD dwThreadId = 0;
 
-        hThread = CreateThread(NULL, 0, WorkerThreadProc, this, 0, &dwThreadId);
+        threadDataArr_[i].hThread = hThread;
+        threadDataArr_[i].dwSendCount = 0;
+        threadDataArr_[i].dwID = i;
+        threadDataArr_[i].pApp = this;
+
+        hThread = CreateThread(NULL, 0, WorkerThreadProc, (LPVOID) & threadDataArr_[i], 0, &dwThreadId);
         if (hThread == NULL) {
             hr = HRESULT_FROM_WIN32(GetLastError());
             LOGF(_T("CreateThread failed! hr = %08X"), hr);
@@ -70,7 +75,7 @@ HRESULT App::Start()
 
         }
 
-        hThreadArr_[i] = hThread;
+
     }
 
     hExitEvent_ = CreateEvent(0, TRUE, 0, 0);
@@ -102,11 +107,11 @@ BOOL App::IsStart()
 
 DWORD WINAPI App::WorkerThreadProc(LPVOID lpParam)
 {
-    App* pThis = (App*)lpParam;
-    return pThis->WorkerThread();
+    THREAD_DATA* pData = (THREAD_DATA*)lpParam;
+    return pData->pApp->WorkerThread(pData->dwID);
 }
 
-DWORD App::WorkerThread()
+DWORD App::WorkerThread(DWORD dwID)
 {
     int r;
     ADDRINFOT* result = NULL,
@@ -193,6 +198,7 @@ DWORD App::WorkerThread()
         wsabufRecv.buf = new CHAR[wsabufSend.len];
 
 
+        
         r = WSARecv(
             sockConn,
             &wsabufRecv,
@@ -210,6 +216,9 @@ DWORD App::WorkerThread()
                 __leave;
             }
         }
+
+
+        *(DWORD*)wsabufSend.buf = threadDataArr_[dwID].dwSendCount++;
 
         r = WSASend(
             sockConn,
@@ -233,7 +242,7 @@ DWORD App::WorkerThread()
         while (bRun)
         {
             BOOL bResult;
-            DWORD dwWaitRet = WSAWaitForMultipleEvents(EventTotal, EventArray, FALSE, 50, FALSE);
+            DWORD dwWaitRet = WSAWaitForMultipleEvents(EventTotal, EventArray, FALSE, 100, FALSE);
 
             switch (dwWaitRet)
             {
@@ -259,7 +268,7 @@ DWORD App::WorkerThread()
 
                 WSAResetEvent(EventArray[dwWaitRet - WSA_WAIT_EVENT_0]);
 
-
+                *(DWORD*)wsabufSend.buf = threadDataArr_[dwID].dwSendCount++;
                 r = WSASend(
                     sockConn,
                     &wsabufSend,
@@ -286,6 +295,8 @@ DWORD App::WorkerThread()
                 break;
 
             case WSA_WAIT_TIMEOUT:
+
+                *(DWORD*)wsabufSend.buf = threadDataArr_[dwID].dwSendCount++;
 
                 r = WSASend(
                     sockConn,
