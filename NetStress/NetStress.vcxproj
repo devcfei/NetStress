@@ -128,12 +128,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="app.cpp" />
+    <ClCompile Include="log.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="maindlg.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="app.h" />
     <ClInclude Include="framework.h" />
+    <ClInclude Include="log.h" />
     <ClInclude Include="maindlg.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>

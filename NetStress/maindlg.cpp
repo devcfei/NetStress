@@ -5,6 +5,32 @@ HRESULT MainDlg::Initialize(HINSTANCE hInstance)
 {
     HRESULT hr = S_OK;
     hInst_ = hInstance;
+
+    TCHAR szCfgPath[MAX_PATH];
+    GetApp()->GetAppPath(szCfgPath, MAX_PATH);
+    StringCchCat(szCfgPath, MAX_PATH, _T("\\NetStress.ini"));
+
+
+
+    BOOL bFileExist = FALSE;
+    DWORD dwAttrib = GetFileAttributes(szCfgPath);
+    if (dwAttrib != INVALID_FILE_ATTRIBUTES && !(dwAttrib & FILE_ATTRIBUTE_DIRECTORY))
+    {
+        bFileExist = TRUE;
+        hr = S_OK;
+    }
+
+    if (!bFileExist)
+    {
+        LOGW(_T("NetStress.ini doesn't exist, create it"));
+        hr = S_OK;
+        WriteConfig(szCfgPath);
+    }
+    else
+    {
+        ReadConfig(szCfgPath);
+    }
+
     return hr;
 }
 
@@ -28,6 +54,7 @@ INT_PTR CALLBACK MainDlg::DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPA
     case WM_INITDIALOG:
         pThis = (MainDlg*)lParam;
 
+        pThis->hDlg_ = hDlg;
         r = pThis->OnInitDialog(hDlg, message, wParam, lParam);
         break;
 
@@ -43,6 +70,46 @@ INT_PTR CALLBACK MainDlg::DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPA
     }
 
     return r;
+}
+
+
+HRESULT MainDlg::InitializeDefaultConfig()
+{
+    HRESULT hr = S_OK;
+
+    StringCchCopy(szIP_, 16, _T("127.0.0.1"));
+    wPort_ = 10240;
+    dwConnCount_ = 1;
+    return hr;
+}
+
+HRESULT MainDlg::ReadConfig(LPCTSTR lpszCfgFile)
+{
+    HRESULT hr = S_OK;
+
+    // [SETTINGS]
+    GetPrivateProfileString(_T("SETTINGS"), _T("IP"), _T("127.0.0.1"), szIP_, 16, lpszCfgFile);
+    wPort_ = GetPrivateProfileInt(_T("SETTINGS"), _T("PORT"), 1433, lpszCfgFile);
+    dwConnCount_ = GetPrivateProfileInt(_T("SETTINGS"), _T("CONNCOUNT"), 1433, lpszCfgFile);
+
+
+    return hr;
+}
+
+HRESULT MainDlg::WriteConfig(LPCTSTR lpszCfgFile)
+{
+    HRESULT hr = S_OK;
+
+    TCHAR value[32];
+
+    // [SETTINGS]
+    WritePrivateProfileString(_T("SETTINGS"), _T("IP"), szIP_, lpszCfgFile);
+    StringCchPrintf(value, 32, _T("%d"), wPort_);
+    WritePrivateProfileString(_T("SETTINGS"), _T("PORT"), value, lpszCfgFile);
+    StringCchPrintf(value, 32, _T("%d"), dwConnCount_);
+    WritePrivateProfileString(_T("SETTINGS"), _T("CONNCOUNT"), value, lpszCfgFile);
+
+    return hr;
 }
 
 INT_PTR MainDlg::OnInitDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
@@ -82,31 +149,16 @@ INT_PTR MainDlg::OnInitDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
 
 
     HWND hWndIP = GetDlgItem(hDlg, IDC_IPADDRESS);
-    SetWindowText(hWndIP, _T("127.0.0.1"));
+    SetWindowText(hWndIP, szIP_);
     HWND hWndPort = GetDlgItem(hDlg, IDC_EDIT_PORT);
-    SetWindowText(hWndPort, _T("10240"));
+    TCHAR szText[32];
+    StringCchPrintf(szText, 32, _T("%d"), wPort_);
+    SetWindowText(hWndPort, szText);
     HWND hWndConnCount = GetDlgItem(hDlg, IDC_EDIT_CONN_COUNT);
-    SetWindowText(hWndConnCount, _T("10"));
+    StringCchPrintf(szText, 32, _T("%d"), dwConnCount_);
+    SetWindowText(hWndConnCount, szText);
 
-    
-
-    //
-    TCHAR lpszLatin[] = L"Lorem ipsum dolor sit amet, consectetur "
-        L"adipisicing elit, sed do eiusmod tempor "
-        L"incididunt ut labore et dolore magna "
-        L"aliqua. Ut enim ad minim veniam, quis "
-        L"nostrud exercitation ullamco laboris nisi "
-        L"ut aliquip ex ea commodo consequat. Duis "
-        L"aute irure dolor in reprehenderit in "
-        L"voluptate velit esse cillum dolore eu "
-        L"fugiat nulla pariatur. Excepteur sint "
-        L"occaecat cupidatat non proident, sunt "
-        L"in culpa qui officia deserunt mollit "
-        L"anim id est laborum.";
-
-    HWND hWndEditLog = GetDlgItem(hDlg, IDC_EDIT_LOG);
-    SetWindowText(hWndEditLog, lpszLatin);
-
+    PrintMessage(_T("Application initialized success!"));
 
     return (INT_PTR)TRUE;
 }
@@ -139,9 +191,32 @@ INT_PTR MainDlg::OnCommand(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
     switch (idCtrlID)
     {
     case IDCANCEL:
+    {
+        TCHAR szCfgPath[MAX_PATH];
+        GetApp()->GetAppPath(szCfgPath, MAX_PATH);
+        StringCchCat(szCfgPath, MAX_PATH, _T("\\NetStress.ini"));
+        // Get current settings
+
+        TCHAR szText[16];
+
+        HWND hWndIP = GetDlgItem(hDlg_, IDC_IPADDRESS);
+        GetWindowText(hWndIP, szIP_, 16);
+
+        HWND hWndPort = GetDlgItem(hDlg_, IDC_EDIT_PORT);
+        GetWindowText(hWndPort, szText, 16);
+        wPort_ = StrToInt(szText);
+
+
+        HWND hWndConnCnt = GetDlgItem(hDlg_, IDC_EDIT_CONN_COUNT);
+        GetWindowText(hWndConnCnt, szText, 16);
+        dwConnCount_ = StrToInt(szText);
+
+        WriteConfig(szCfgPath);
+
         EndDialog(hDlg, LOWORD(wParam));
         r = (INT_PTR)TRUE;
         break;
+    }
 
     case IDC_BTN_STARTSTOP:
         if (GetApp()->IsStart())
@@ -159,4 +234,47 @@ INT_PTR MainDlg::OnCommand(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
         break;
     }
     return r;
+}
+
+ULONG MainDlg::GetIPAddress(TCHAR szIP[], ULONG nSize)
+{
+    HWND hWndIP = GetDlgItem(hDlg_, IDC_IPADDRESS);
+    return GetWindowText(hWndIP, szIP, nSize);
+}
+
+WORD MainDlg::GetPortNumber()
+{
+    HWND hWndPort = GetDlgItem(hDlg_, IDC_EDIT_PORT);
+    TCHAR szText[16];
+    GetWindowText(hWndPort, szText, 16);
+    return StrToInt(szText);
+}
+
+DWORD MainDlg::GetConnCount()
+{
+    HWND hWndConnCnt = GetDlgItem(hDlg_, IDC_EDIT_CONN_COUNT);
+    TCHAR szText[16];
+    GetWindowText(hWndConnCnt, szText, 16);
+    return StrToInt(szText);
+}
+
+VOID MainDlg::PrintMessage(LPCTSTR fmt,...)
+{
+    HRESULT hr;
+    TCHAR szMessageBuffer[1024] = { 0 };
+    va_list valist;
+    va_start(valist, fmt);
+    hr = StringCchVPrintf(szMessageBuffer, 1024, fmt, valist);
+    if (FAILED(hr))
+    {
+        return ;
+    }
+    va_end(valist);
+
+
+    msg_ += szMessageBuffer;
+    msg_ += _T("\r\n");
+
+    HWND hWndEditLog = GetDlgItem(hDlg_, IDC_EDIT_LOG);
+    SetWindowText(hWndEditLog, msg_.c_str());
 }
