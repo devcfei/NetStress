@@ -9,6 +9,7 @@ public:
         :hInst_(0)
         , hbrBkgnd_(0)
         , hDlg_(0)
+        , dwLineCount_(0)
     {
         InitializeDefaultConfig();
     }
@@ -33,6 +34,7 @@ private:
     INT_PTR OnCommand(HWND, UINT, WPARAM, LPARAM);
 
     std::tstring msg_;
+    DWORD dwLineCount_;
 
 private:
     // config

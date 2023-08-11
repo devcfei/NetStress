@@ -274,7 +274,9 @@ VOID MainDlg::PrintMessage(LPCTSTR fmt,...)
 
     msg_ += szMessageBuffer;
     msg_ += _T("\r\n");
+    dwLineCount_++;
 
     HWND hWndEditLog = GetDlgItem(hDlg_, IDC_EDIT_LOG);
     SetWindowText(hWndEditLog, msg_.c_str());
+    SendMessage(hWndEditLog, EM_LINESCROLL, 0, dwLineCount_);
 }
